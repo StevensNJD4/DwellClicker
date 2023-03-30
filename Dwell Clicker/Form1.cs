@@ -84,31 +84,18 @@ namespace Dwell_Clicker
             int formHeight = _moveButton.Bottom + 10; // 10 pixels padding below the buttons
             this.ClientSize = new Size(formWidth, formHeight);
 
-            // Remove the title bar
-            this.FormBorderStyle = FormBorderStyle.None;
-
-            // Set the form background color and make it transparent
-            this.BackColor = Color.Magenta; // You can choose any color that you don't use in your form controls
-            this.TransparencyKey = this.BackColor;
-
-            // Make the form stay on top of all other windows
-            this.TopMost = true;
-
-            _positionTrackerTimer.Tick += PositionTrackerTimer_Tick;
-            _positionTrackerTimer.Start();
-
         }
 
         private void InitializeButtons()
         {
-            _onOffButton = new DwellClickerButton(ClickState.Off, new Point(10, 5), new Size(40, 50), Color.White, Color.Black) { Text = "On/Off", Name = "OnOffButton" };
+            _onOffButton = new DwellClickerButton(ClickState.Off, new Point(10, 5), new Size(40, 50), SystemColors.Control, Color.Black) { Text = "On/Off", Name = "OnOffButton" };
             _leftClickButton = new DwellClickerButton(ClickState.LeftClick, new Point(50, 5), new Size(40, 50), SystemColors.Control, SystemColors.ControlText, isDefault: true) { Text = "Left", Name = "LeftClickButton" };
-            _doubleClickButton = new DwellClickerButton(ClickState.DoubleClick, new Point(90, 5), new Size(40, 50), Color.White, Color.Black) { Text = "Double", Name = "DoubleClickButton" };
-            _rightClickButton = new DwellClickerButton(ClickState.RightClick, new Point(130, 5), new Size(40, 50), Color.White, Color.Black) { Text = "Right", Name = "RightClickButton" };
-            _dragButton = new DwellClickerButton(ClickState.Drag, new Point(170, 5), new Size(40, 50), Color.White, Color.Black) { Text = "Drag", Name = "DragButton" };
-            _middleClickButton = new DwellClickerButton(ClickState.MiddleClick, new Point(210, 5), new Size(40, 50), Color.White, Color.Black) { Text = "Middle", Name = "MiddleClickButton" };
-            _settingsButton = new Button { Text = "Settings", Location = new Point(250, 5), Size = new Size(40, 50), BackColor = Color.White, ForeColor = Color.Black, Name = "SettingsButton" };
-            _moveButton = new Button { Text = "Move", Location = new Point(290, 5), Size = new Size(40, 50), BackColor = Color.White, ForeColor = Color.Black, Name = "MoveButton" };
+            _doubleClickButton = new DwellClickerButton(ClickState.DoubleClick, new Point(90, 5), new Size(40, 50), SystemColors.Control, Color.Black) { Text = "Double", Name = "DoubleClickButton" };
+            _rightClickButton = new DwellClickerButton(ClickState.RightClick, new Point(130, 5), new Size(40, 50), SystemColors.Control, Color.Black) { Text = "Right", Name = "RightClickButton" };
+            _dragButton = new DwellClickerButton(ClickState.Drag, new Point(170, 5), new Size(40, 50), SystemColors.Control, Color.Black) { Text = "Drag", Name = "DragButton" };
+            _middleClickButton = new DwellClickerButton(ClickState.MiddleClick, new Point(210, 5), new Size(40, 50), SystemColors.Control, Color.Black) { Text = "Middle", Name = "MiddleClickButton" };
+            _settingsButton = new Button { Text = "Settings", Location = new Point(250, 5), Size = new Size(40, 50), BackColor = SystemColors.Control, ForeColor = Color.Black, Name = "SettingsButton" };
+            _moveButton = new Button { Text = "Move", Location = new Point(290, 5), Size = new Size(40, 50), BackColor = SystemColors.Control, ForeColor = Color.Black, Name = "MoveButton" };
             _moveButton.MouseDown += MoveButton_MouseDown;
             _moveButton.MouseMove += MoveButton_MouseMove;
             _moveButton.MouseUp += MoveButton_MouseUp;
@@ -233,8 +220,9 @@ namespace Dwell_Clicker
                 newLocation.Offset(e.Location.X - _dragStart.X, e.Location.Y - _dragStart.Y);
 
                 // Check if the new location is within the screen bounds
-                if (newLocation.X >= 0 && newLocation.Y >= 0)
+                if (newLocation.X >= 0)
                 {
+                    newLocation.Y = 0;
                     this.Location = newLocation;
                 }
             }
@@ -324,26 +312,17 @@ namespace Dwell_Clicker
 
         private void SaveFormLocation()
         {
-            string locationFilePath = "form_location.txt";
-            using (StreamWriter writer = new StreamWriter(locationFilePath))
-            {
-                writer.WriteLine(this.Location.X);
-                writer.WriteLine(this.Location.Y);
-            }
+            Properties.Settings.Default.posX = this.Location.X;
+            Properties.Settings.Default.posY = this.Location.Y;
+            Properties.Settings.Default.Save();
         }
 
         private void LoadFormLocation()
         {
-            string locationFilePath = "form_location.txt";
-            if (File.Exists(locationFilePath))
-            {
-                using (StreamReader reader = new StreamReader(locationFilePath))
-                {
-                    int x = int.Parse(reader.ReadLine());
-                    int y = int.Parse(reader.ReadLine());
-                    this.Location = new Point(x, y);
-                }
-            }
+            int x = (int)Properties.Settings.Default.posX;
+            int y = (int)Properties.Settings.Default.posY;
+
+            this.Location = new Point(x, y);
         }
 
         private void ClickHandler_ClickPerformed(object sender, EventArgs e)
@@ -397,7 +376,7 @@ namespace Dwell_Clicker
 
                 if (this.Top < _maxY)
                 {
-                    newY = this.Top + AnimationStep*3;
+                    newY = this.Top + AnimationStep * 3;
                 }
                 else
                 {

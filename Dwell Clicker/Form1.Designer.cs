@@ -33,6 +33,11 @@
             animationTimer = new System.Windows.Forms.Timer(components);
             SuspendLayout();
             // 
+            // _positionTrackerTimer
+            // 
+            _positionTrackerTimer.Enabled = true;
+            _positionTrackerTimer.Tick += PositionTrackerTimer_Tick;
+            // 
             // animationTimer
             // 
             animationTimer.Tick += animationTimer_Tick;
@@ -41,9 +46,14 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.Lime;
             ClientSize = new Size(800, 450);
+            ControlBox = false;
+            FormBorderStyle = FormBorderStyle.None;
             Name = "Form1";
-            Text = "Form1";
+            Text = "Dwell Clicker";
+            TopMost = true;
+            TransparencyKey = Color.Lime;
             Load += Form1_Load;
             ResumeLayout(false);
         }

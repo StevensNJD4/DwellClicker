@@ -2,10 +2,10 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Dwell_Clicker.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="posX" Type="System.Int32" Scope="Application">
+    <Setting Name="posX" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="posY" Type="System.Int32" Scope="Application">
+    <Setting Name="posY" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="DwellTime" Type="System.Decimal" Scope="User">
