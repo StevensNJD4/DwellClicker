@@ -57,6 +57,7 @@
             _dwellSlider.Minimum = 100;
             _dwellSlider.Name = "_dwellSlider";
             _dwellSlider.Size = new Size(120, 45);
+            _dwellSlider.SmallChange = 100;
             _dwellSlider.TabIndex = 1;
             _dwellSlider.TickFrequency = 100;
             _dwellSlider.Value = 1000;
@@ -101,6 +102,7 @@
             _dwellTimeOnOffSlider.Minimum = 100;
             _dwellTimeOnOffSlider.Name = "_dwellTimeOnOffSlider";
             _dwellTimeOnOffSlider.Size = new Size(120, 45);
+            _dwellTimeOnOffSlider.SmallChange = 100;
             _dwellTimeOnOffSlider.TabIndex = 5;
             _dwellTimeOnOffSlider.TickFrequency = 100;
             _dwellTimeOnOffSlider.Value = 1000;
@@ -134,6 +136,7 @@
             ShowIcon = false;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
+            TopMost = true;
             ((System.ComponentModel.ISupportInitialize)_dwellSlider).EndInit();
             ((System.ComponentModel.ISupportInitialize)_movementSlider).EndInit();
             ((System.ComponentModel.ISupportInitialize)_dwellTimeOnOffSlider).EndInit();

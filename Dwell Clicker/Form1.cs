@@ -40,23 +40,25 @@ namespace Dwell_Clicker
         private int _dwellTimeOnOff = 1000; // Time to wait in milliseconds
         private int _movementThreshold = 10; // Pixels of allowed movement
 
-        private DwellClickerButton _currentDefaultButton;
-
-        private const int AnimationStep = 5;
+        private const int AnimationStep = 10;
         private bool _animateInDirection;
         private int _maxY;
         private int _minY;
-        private int _peep = 38;
+        private int _peep = 15;
+
+        private SettingsDialog _settingsDialog;
 
         private void AnimateIn()
         {
             _animateInDirection = true;
+            _animationProgress = 0;
             animationTimer.Start();
         }
 
         private void AnimateOut()
         {
             _animateInDirection = false;
+            _animationProgress = 0;
             animationTimer.Start();
         }
 
@@ -69,7 +71,6 @@ namespace Dwell_Clicker
             _dwellStartTime = DateTime.Now;
             _previousCursorPosition = Cursor.Position;
             _clickPerformed = false;
-            _currentDefaultButton = _leftClickButton;
 
             // Set clickerEnabled to true and change the On/Off button color
             _clickerEnabled = true;
@@ -237,38 +238,62 @@ namespace Dwell_Clicker
             }
         }
 
+        private List<Point> _cursorHistory = new List<Point>();
+
         private void PositionTrackerTimer_Tick(object sender, EventArgs e)
         {
             double distanceToForm = DistanceToForm();
             if (distanceToForm <= 60 && distanceToForm != 0 && !animationTimer.Enabled)
             {
-                AnimateIn();
+                if (!_animateInDirection)
+                {
+                    AnimateIn();
+                }
             }
             else if (distanceToForm > 5 && !animationTimer.Enabled)
             {
-                AnimateOut();
+                if (_animateInDirection)
+                {
+                    AnimateOut();
+                }
             }
 
-            if (Distance(_previousCursorPosition, Cursor.Position) > _movementThreshold)
+            Point currentCursorPosition = Cursor.Position;
+
+            // Add the current cursor position to the history
+            _cursorHistory.Add(currentCursorPosition);
+
+            // Check if all points in the cursor history are within the movement threshold
+            Point averagePosition = CalculateAveragePosition(_cursorHistory);
+            bool allPointsWithinThreshold = _cursorHistory.All(p => Distance(p, averagePosition) <= _movementThreshold);
+
+            if (!allPointsWithinThreshold)
             {
                 _dwellStartTime = DateTime.Now;
                 _clickPerformed = false;
-                _previousCursorPosition = Cursor.Position;
+                _cursorHistory.Clear();
             }
-            else
-            {
-                TimeSpan timeElapsed = DateTime.Now - _dwellStartTime;
-                if (!_clickPerformed)
-                {
-                    bool isCursorOverButton = IsCursorOverOnOffButon();
-                    int dwellThreshold = isCursorOverButton ? _dwellTimeOnOff : _dwellTime;
 
-                    if (timeElapsed.TotalMilliseconds >= (dwellThreshold - _positionTrackerTimer.Interval))
-                    {
-                        PerformDwellClick();
-                    }
+            // If the cursor history is long enough, perform the dwell click
+            TimeSpan timeElapsed = DateTime.Now - _dwellStartTime;
+            bool isCursorOverButton = IsCursorOverOnOffButon();
+            int dwellThreshold = isCursorOverButton ? _dwellTimeOnOff : _dwellTime;
+
+            if (!_clickPerformed && timeElapsed.TotalMilliseconds >= dwellThreshold)
+            {
+                if (_cursorHistory.Count > 0)
+                {
+                    PerformDwellClick();
+                    _cursorHistory.Clear();
                 }
             }
+        }
+
+        private Point CalculateAveragePosition(List<Point> points)
+        {
+            int xSum = points.Sum(p => p.X);
+            int ySum = points.Sum(p => p.Y);
+            return new Point(xSum / points.Count, ySum / points.Count);
         }
 
         private void PerformDwellClick()
@@ -364,38 +389,32 @@ namespace Dwell_Clicker
             _dwellTime = (int)Properties.Settings.Default.DwellTime;
             _dwellTimeOnOff = (int)Properties.Settings.Default.DwellTimeOnOff;
             _movementThreshold = Properties.Settings.Default.MovementThreshold;
+
+            AnimateOut();
         }
+
+        private double _animationProgress;
 
         private void animationTimer_Tick(object sender, EventArgs e)
         {
-            int newY = this.Top;
+            double AnimationStepIn = AnimationStep * 2; // Double the speed for AnimateIn
+            double AnimationStepOut = AnimationStep;
 
-            if (_animateInDirection)
-            {
-                //Debug.WriteLine(this.Top + "  " + _maxY);
+            double step = _animateInDirection ? AnimationStepIn : AnimationStepOut;
+            _animationProgress += step / 100.0;
 
-                if (this.Top < _maxY)
-                {
-                    newY = this.Top + AnimationStep * 3;
-                }
-                else
-                {
-                    animationTimer.Stop();
-                }
-            }
-            else
+            if (_animationProgress > 1)
             {
-                if (this.Top > _minY)
-                {
-                    newY = this.Top - AnimationStep;
-                }
-                else
-                {
-                    animationTimer.Stop();
-                }
+                _animationProgress = 1;
+                animationTimer.Stop();
             }
 
-            this.Top = newY;
+            this.Top = (int)Lerp(_animateInDirection ? _minY : _maxY, _animateInDirection ? _maxY : _minY, _animationProgress);
+        }
+
+        private double Lerp(double a, double b, double t)
+        {
+            return a + (b - a) * t;
         }
 
         private double DistanceToForm()
@@ -416,12 +435,17 @@ namespace Dwell_Clicker
 
         private void _settingsButton_Click(object sender, EventArgs e)
         {
-            using (SettingsDialog settingsDialog = new SettingsDialog())
+            if (_settingsDialog == null || _settingsDialog.IsDisposed)
             {
-                settingsDialog.DwellTimeChanged += SettingsDialog_DwellTimeChanged;
-                settingsDialog.MovementThresholdChanged += SettingsDialog_MovementThresholdChanged;
-                settingsDialog.DwellTimeOnOffChanged += SettingsDialog_DwellTimeOnOffChanged;
-                settingsDialog.ShowDialog();
+                _settingsDialog = new SettingsDialog();
+                _settingsDialog.DwellTimeChanged += SettingsDialog_DwellTimeChanged;
+                _settingsDialog.DwellTimeOnOffChanged += SettingsDialog_DwellTimeOnOffChanged;
+                _settingsDialog.MovementThresholdChanged += SettingsDialog_MovementThresholdChanged;
+                _settingsDialog.Show(this);
+            }
+            else
+            {
+                _settingsDialog.BringToFront();
             }
         }
 

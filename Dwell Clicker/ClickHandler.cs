@@ -6,32 +6,8 @@ using System.Windows.Forms;
 
 public class ClickHandler
 {
-    [DllImport("user32.dll", SetLastError = true)]
-    static extern uint SendInput(uint nInputs, ref INPUT pInputs, int cbSize);
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct INPUT
-    {
-        public uint type;
-        public MOUSEKEYBDHARDWAREINPUT Data;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    struct MOUSEKEYBDHARDWAREINPUT
-    {
-        [FieldOffset(0)] public MOUSEINPUT Mouse;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct MOUSEINPUT
-    {
-        public int dx;
-        public int dy;
-        public int mouseData;
-        public uint dwFlags;
-        public uint time;
-        public IntPtr dwExtraInfo;
-    }
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
 
     const int INPUT_MOUSE = 0;
     const int MOUSEEVENTF_LEFTDOWN = 0x0002;
@@ -81,23 +57,7 @@ public class ClickHandler
 
     private void SendMouseEvent(uint buttonFlag)
     {
-        INPUT input = new INPUT
-        {
-            type = INPUT_MOUSE,
-            Data = new MOUSEKEYBDHARDWAREINPUT
-            {
-                Mouse = new MOUSEINPUT
-                {
-                    dx = 0,
-                    dy = 0,
-                    mouseData = 0,
-                    dwFlags = buttonFlag,
-                    time = 0,
-                    dwExtraInfo = IntPtr.Zero
-                }
-            }
-        };
-        SendInput(1, ref input, Marshal.SizeOf(typeof(INPUT)));
+        mouse_event(buttonFlag, 0, 0, 0, 0);
     }
 
     public bool IsDragging()
