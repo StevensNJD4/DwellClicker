@@ -48,6 +48,17 @@ namespace Dwell_Clicker
 
         private SettingsDialog _settingsDialog;
 
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int WS_EX_NOACTIVATE = 0x08000000;
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= WS_EX_NOACTIVATE;
+                return cp;
+            }
+        }
+
         private void AnimateIn()
         {
             _animateInDirection = true;
@@ -127,6 +138,10 @@ namespace Dwell_Clicker
             _middleClickButton.Visible = visible;
             _moveButton.Visible = visible;
             _settingsButton.Visible = visible;
+
+            int formWidth = visible ? _moveButton.Right + 10 : _onOffButton.Right; // 10 pixels padding to the right of the last button
+            int formHeight = _onOffButton.Bottom + 10; // 10 pixels padding below the buttons
+            this.ClientSize = new Size(formWidth, formHeight);
         }
 
         private void SetDefaultClickState(ClickState newClickState)
@@ -243,19 +258,24 @@ namespace Dwell_Clicker
         private void PositionTrackerTimer_Tick(object sender, EventArgs e)
         {
             double distanceToForm = DistanceToForm();
-            if (distanceToForm <= 60 && distanceToForm != 0 && !animationTimer.Enabled)
+            if (distanceToForm <= 60 && !animationTimer.Enabled)
             {
                 if (!_animateInDirection)
                 {
                     AnimateIn();
                 }
             }
-            else if (distanceToForm > 5 && !animationTimer.Enabled)
+            else if (distanceToForm > 60 && !animationTimer.Enabled)
             {
                 if (_animateInDirection)
                 {
                     AnimateOut();
                 }
+            }
+
+            if (!_clickerEnabled && !IsCursorOverOnOffButon())
+            {
+                return;
             }
 
             Point currentCursorPosition = Cursor.Position;
@@ -302,7 +322,7 @@ namespace Dwell_Clicker
             {
                 _clickHandler.PerformClick(ClickState.LeftClick);
             }
-            else if (!_clickerEnabled)
+            else if (!_clickerEnabled || IsCursorOverOnOffButon())
             {
                 return;
             }
@@ -325,7 +345,6 @@ namespace Dwell_Clicker
 
             _clickPerformed = true;
         }
-
 
         private double Distance(Point p1, Point p2)
         {
@@ -383,7 +402,7 @@ namespace Dwell_Clicker
         {
             LoadFormLocation();
 
-            _maxY = 0;// this.Top;
+            _maxY = -10;// this.Top;
             _minY = (this.Top - _onOffButton.Height) + _peep;
 
             _dwellTime = (int)Properties.Settings.Default.DwellTime;
@@ -397,7 +416,7 @@ namespace Dwell_Clicker
 
         private void animationTimer_Tick(object sender, EventArgs e)
         {
-            double AnimationStepIn = AnimationStep * 2; // Double the speed for AnimateIn
+            double AnimationStepIn = AnimationStep * 3; // Double the speed for AnimateIn
             double AnimationStepOut = AnimationStep;
 
             double step = _animateInDirection ? AnimationStepIn : AnimationStepOut;
@@ -410,6 +429,7 @@ namespace Dwell_Clicker
             }
 
             this.Top = (int)Lerp(_animateInDirection ? _minY : _maxY, _animateInDirection ? _maxY : _minY, _animationProgress);
+            Debug.WriteLine(this.Top);
         }
 
         private double Lerp(double a, double b, double t)
